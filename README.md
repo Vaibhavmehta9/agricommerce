@@ -12,6 +12,20 @@ AgriCommerce is a full-stack MERN agricultural e-commerce platform for retail cu
 - MongoDB-backed API with JWT authentication
 - Seed script with sample products, categories, CMS pages, orders, enquiries, homepage content, and admin user
 
+## Frontend Preview
+
+### Home Page
+
+![AgriCommerce home page](docs/images/home-page.png)
+
+### Cart Page
+
+![AgriCommerce cart page](docs/images/cart-page.png)
+
+### Admin Login
+
+![AgriCommerce admin login](docs/images/admin-login.png)
+
 ## Project Structure
 
 ```text
