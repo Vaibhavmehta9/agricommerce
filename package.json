@@ -1,0 +1,16 @@
+{
+  "name": "agricommerce",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=apps/backend",
+    "dev:frontend": "npm run dev --workspace=apps/frontend",
+    "seed": "npm run seed --workspace=apps/backend",
+    "install:all": "npm install"
+  },
+  "description": "AgriCommerce — B2B/B2C Agricultural E-Commerce Monorepo"
+}
