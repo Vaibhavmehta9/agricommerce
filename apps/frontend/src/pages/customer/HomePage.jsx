@@ -150,7 +150,8 @@ function HomePage() {
         ])
 
         if (hpRes.status === 'fulfilled') {
-          setHomepageData(hpRes.value.data?.data || hpRes.value.data)
+          const raw = hpRes.value.data?.data || hpRes.value.data
+          setHomepageData(raw?.content ?? raw)
         }
         if (catRes.status === 'fulfilled') {
           const data = catRes.value.data?.data || catRes.value.data || []
@@ -171,7 +172,10 @@ function HomePage() {
 
   const hero = homepageData?.hero || FALLBACK_HERO
   const whyChooseUs = homepageData?.whyChooseUs || FALLBACK_WHY_CHOOSE
-  const testimonials = homepageData?.testimonials || FALLBACK_TESTIMONIALS
+  const testimonials = (homepageData?.testimonials || FALLBACK_TESTIMONIALS).map((t) => ({
+    ...t,
+    quote: t.quote || t.content,
+  }))
 
   const prevTestimonial = () => setTestimonialIndex((i) => (i === 0 ? testimonials.length - 1 : i - 1))
   const nextTestimonial = () => setTestimonialIndex((i) => (i === testimonials.length - 1 ? 0 : i + 1))

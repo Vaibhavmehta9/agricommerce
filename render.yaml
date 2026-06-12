@@ -1,9 +1,11 @@
+# Render Blueprint — deploy backend API
+# Dashboard: New > Blueprint > connect this repo
 services:
   - type: web
     name: agricommerce-api
     runtime: node
-    rootDir: apps/backend
     plan: free
+    rootDir: apps/backend
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /api/health
@@ -17,6 +19,6 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
-        sync: false
-      - key: FRONTEND_URLS
+        generateValue: true
+      - key: FRONTEND_URL
         sync: false

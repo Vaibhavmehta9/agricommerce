@@ -1,3 +1,6 @@
+require('../models/Category');
+require('../models/Product');
+require('../models/Testimonial');
 const HomepageContent = require('../models/HomepageContent');
 
 /**

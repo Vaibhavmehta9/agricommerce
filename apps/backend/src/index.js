@@ -6,6 +6,7 @@ const cors = require('cors');
 const path = require('path');
 
 const connectDB = require('./config/db');
+const uploadDir = require('./config/uploads');
 const errorHandler = require('./middleware/error');
 
 // Route imports
@@ -30,11 +31,19 @@ const allowedOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL ||
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  // Vercel production + preview URLs (e.g. https://agricommerce.vercel.app)
+  if (/^https:\/\/[\w.-]+\.vercel\.app$/.test(origin)) return true;
+  return false;
+};
+
 // CORS configuration
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
       return callback(new Error(`Origin ${origin} is not allowed by CORS`));
@@ -50,8 +59,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve static upload files
-const uploadDir = process.env.UPLOAD_DIR || 'uploads';
-app.use('/uploads', express.static(path.join(process.cwd(), uploadDir)));
+app.use('/uploads', express.static(uploadDir));
 
 // Health check
 app.get('/api/health', (req, res) => {

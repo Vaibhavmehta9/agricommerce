@@ -34,7 +34,8 @@ function AdminHomepagePage() {
           getProducts({ limit: 50, status: 'active' }),
         ])
         if (hpRes.status === 'fulfilled') {
-          const d = hpRes.value.data?.data || hpRes.value.data
+          const raw = hpRes.value.data?.data || hpRes.value.data
+          const d = raw?.content ?? raw
           if (d) setData({ ...defaultData, ...d })
         }
         if (catRes.status === 'fulfilled') {

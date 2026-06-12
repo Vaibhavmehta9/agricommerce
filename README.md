@@ -169,21 +169,89 @@ npm run build --workspace=apps/frontend
 | Product action | Add to cart | Request quote |
 | Main lead flow | Place order | Send bulk enquiry |
 
-## Deployment Notes
+## Deploy to Render (backend) + Vercel (frontend)
 
-Frontend deployment:
+Push your code to GitHub first (`origin` should point to your repo).
 
-- Root directory: `apps/frontend`
-- Build command: `npm run build`
-- Output directory: `dist`
-- Required env: `VITE_API_URL`, `VITE_UPLOAD_URL`
+### 1. MongoDB Atlas
 
-Backend deployment:
+1. Open [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and create a free cluster.
+2. Create a database user and allow network access (`0.0.0.0/0` for Render).
+3. Copy the connection string and set the database name to `agricommerce`:
+   `mongodb+srv://<user>:<pass>@cluster.mongodb.net/agricommerce`
 
-- Root directory: `apps/backend`
-- Start command: `npm start`
-- Required env: values from `apps/backend/.env.example`
-- Use MongoDB Atlas or another hosted MongoDB instance
+### 2. Render — backend API
+
+**Option A — Blueprint (recommended)**
+
+1. Go to [Render Dashboard](https://dashboard.render.com) → **New** → **Blueprint**.
+2. Connect `Vaibhavmehta9/agricommerce` (or your fork).
+3. Render reads `render.yaml` and creates `agricommerce-api`.
+4. Set environment variables when prompted:
+   - `MONGODB_URI` — your Atlas URI
+   - `FRONTEND_URL` — your Vercel URL (set after step 3, then redeploy)
+5. After deploy, note the API URL, e.g. `https://agricommerce-api.onrender.com`.
+
+**Option B — Manual Web Service**
+
+| Setting | Value |
+| --- | --- |
+| Root Directory | `apps/backend` |
+| Build Command | `npm install` |
+| Start Command | `npm start` |
+| Health Check Path | `/api/health` |
+
+Environment variables:
+
+```env
+NODE_ENV=production
+MONGODB_URI=mongodb+srv://...
+JWT_SECRET=<long-random-string>
+JWT_EXPIRES_IN=7d
+FRONTEND_URL=https://your-app.vercel.app
+UPLOAD_DIR=uploads
+```
+
+**Seed production database (once)**
+
+Render Dashboard → your service → **Shell**:
+
+```bash
+npm run seed
+```
+
+**Uploads note:** Render’s disk is ephemeral. Seed data uses external image URLs and works out of the box. Admin-uploaded files in `/uploads` are lost on redeploy; use Cloudinary or S3 for persistent uploads in production.
+
+### 3. Vercel — frontend
+
+1. Go to [Vercel](https://vercel.com) → **Add New** → **Project** → import your GitHub repo.
+2. Set **Root Directory** to `apps/frontend` (Vercel will use `vercel.json` there).
+3. Add environment variables **before** the first deploy:
+
+```env
+VITE_API_URL=https://agricommerce-api.onrender.com/api
+VITE_UPLOAD_URL=https://agricommerce-api.onrender.com
+```
+
+4. Deploy. Your site will be at `https://<project>.vercel.app`.
+
+### 4. Connect frontend and backend
+
+1. Copy your Vercel URL.
+2. In Render → **Environment** → set `FRONTEND_URL` to that URL → **Save** (triggers redeploy).
+3. Vercel `*.vercel.app` origins are allowed by the API CORS config.
+
+### 5. Verify
+
+- API health: `https://<render-url>/api/health`
+- Storefront: `https://<vercel-url>/`
+- Admin: `https://<vercel-url>/admin/login` (`admin@agri.com` / `Admin@1234` after seeding)
+
+### Free-tier notes
+
+- Render free services spin down after ~15 min idle; first request may take 30–60s.
+- Redeploy backend after changing `FRONTEND_URL` or `MONGODB_URI`.
+- Rebuild frontend on Vercel whenever `VITE_API_URL` or `VITE_UPLOAD_URL` changes.
 
 ## Git Hygiene
 
