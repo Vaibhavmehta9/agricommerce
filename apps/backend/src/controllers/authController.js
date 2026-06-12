@@ -66,5 +66,48 @@ const getMe = async (req, res) => {
     },
   });
 };
+/**
+ * @desc   Register a new customer user
+ * @route  POST /api/auth/register
+ * @access Public
+ */
+const register = async (req, res) => {
+  const { name, email, password } = req.body;
 
-module.exports = { login, getMe };
+  if (!name || !email || !password) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
+
+  try {
+    const emailLower = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: emailLower });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'User already exists with this email' });
+    }
+
+    const user = await User.create({
+      name,
+      email: emailLower,
+      password,
+      role: 'user',
+    });
+
+    const token = signToken(user);
+
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message || 'Server error during registration' });
+  }
+};
+
+module.exports = { login, getMe, register };

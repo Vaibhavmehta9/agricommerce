@@ -12,6 +12,11 @@ import CheckoutPage from '../pages/customer/CheckoutPage'
 import EnquiryPage from '../pages/customer/EnquiryPage'
 import CMSPageView from '../pages/customer/CMSPageView'
 import NotFoundPage from '../pages/customer/NotFoundPage'
+import LoginPage from '../pages/customer/LoginPage'
+import RegisterPage from '../pages/customer/RegisterPage'
+import MyOrdersPage from '../pages/customer/MyOrdersPage'
+import TrackOrderPage from '../pages/customer/TrackOrderPage'
+import ContactPage from '../pages/customer/ContactPage'
 
 // Admin pages
 import AdminLoginPage from '../pages/admin/AdminLoginPage'
@@ -29,7 +34,7 @@ import AdminSettingsPage from '../pages/admin/AdminSettingsPage'
 import AdminLayout from '../components/layout/AdminLayout'
 
 // Private route guard
-function PrivateRoute({ children }) {
+function PrivateRoute({ children, redirectTo = "/admin/login" }) {
   const { isAuthenticated, isLoading } = useAuth()
 
   if (isLoading) {
@@ -37,6 +42,21 @@ function PrivateRoute({ children }) {
   }
 
   if (!isAuthenticated) {
+    return <Navigate to={redirectTo} replace />
+  }
+
+  return children
+}
+
+// Admin only route guard
+function AdminRoute({ children }) {
+  const { user, isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return <LoadingSpinner fullScreen size="lg" message="Loading..." />
+  }
+
+  if (!isAuthenticated || user?.role !== 'admin') {
     return <Navigate to="/admin/login" replace />
   }
 
@@ -53,7 +73,19 @@ function AppRouter() {
       <Route path="/cart" element={<CartPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/enquiry" element={<EnquiryPage />} />
+      <Route path="/pages/contact" element={<ContactPage />} />
       <Route path="/pages/:slug" element={<CMSPageView />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/track-order" element={<TrackOrderPage />} />
+      <Route
+        path="/my-orders"
+        element={
+          <PrivateRoute redirectTo="/login">
+            <MyOrdersPage />
+          </PrivateRoute>
+        }
+      />
 
       {/* Admin login (no layout) */}
       <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -62,9 +94,9 @@ function AppRouter() {
       <Route
         path="/admin"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <Navigate to="/admin/dashboard" replace />
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
 
@@ -72,101 +104,101 @@ function AppRouter() {
       <Route
         path="/admin/dashboard"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <AdminLayout>
               <DashboardPage />
             </AdminLayout>
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/products"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <AdminLayout>
               <AdminProductsPage />
             </AdminLayout>
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/categories"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <AdminLayout>
               <AdminCategoriesPage />
             </AdminLayout>
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/homepage"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <AdminLayout>
               <AdminHomepagePage />
             </AdminLayout>
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/banners"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <AdminLayout>
               <AdminBannersPage />
             </AdminLayout>
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/cms"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <AdminLayout>
               <AdminCMSPage />
             </AdminLayout>
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/cms/:slug"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <AdminLayout>
               <AdminCMSPage />
             </AdminLayout>
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/enquiries"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <AdminLayout>
               <AdminEnquiriesPage />
             </AdminLayout>
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/orders"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <AdminLayout>
               <AdminOrdersPage />
             </AdminLayout>
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/settings"
         element={
-          <PrivateRoute>
+          <AdminRoute>
             <AdminLayout>
               <AdminSettingsPage />
             </AdminLayout>
-          </PrivateRoute>
+          </AdminRoute>
         }
       />
 

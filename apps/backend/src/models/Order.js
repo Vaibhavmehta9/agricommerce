@@ -13,6 +13,11 @@ const orderSchema = new mongoose.Schema(
         pincode: { type: String, required: [true, 'Pincode is required'] },
       },
     },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
+    },
     items: [
       {
         product: {
@@ -32,7 +37,7 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+      enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Returned'],
       default: 'Pending',
     },
     notes: {

@@ -30,7 +30,7 @@ function AdminCMSPage() {
       setLoading(true)
       try {
         const res = await getCMSPage(slug)
-        const data = res.data?.data || res.data
+        const data = res.data?.page || res.data?.data || res.data
         setPage(data)
         setTitle(data?.title || CMS_PAGES.find((p) => p.slug === slug)?.label || '')
         setBody(data?.body || data?.content || '')

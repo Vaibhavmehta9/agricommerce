@@ -5,13 +5,15 @@ import AdminTable from '../../components/admin/AdminTable'
 import { getOrders, updateOrderStatus } from '../../api/ordersAPI'
 import { formatPrice, formatDateTime, getImageUrl } from '../../utils/formatPrice'
 
-const STATUS_OPTIONS = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
+const STATUS_OPTIONS = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Returned']
 const STATUS_COLORS = {
   Pending: 'bg-yellow-100 text-yellow-800',
   Processing: 'bg-blue-100 text-blue-800',
   Shipped: 'bg-purple-100 text-purple-800',
   Delivered: 'bg-green-100 text-green-800',
   Cancelled: 'bg-red-100 text-red-800',
+  'Return Requested': 'bg-indigo-100 text-indigo-800',
+  Returned: 'bg-gray-100 text-gray-800',
 }
 
 function AdminOrdersPage() {
@@ -145,11 +147,11 @@ function AdminOrdersPage() {
               </div>
 
               {/* Address */}
-              {selectedOrder.address && (
+              {selectedOrder.customer?.address && (
                 <div>
                   <h3 className="font-bold text-gray-700 text-sm mb-2 uppercase tracking-wide">Delivery Address</h3>
                   <p className="text-gray-600 text-sm bg-gray-50 rounded-xl p-3">
-                    {selectedOrder.address.street}, {selectedOrder.address.city}, {selectedOrder.address.state} — {selectedOrder.address.pincode}
+                    {selectedOrder.customer.address.street}, {selectedOrder.customer.address.city}, {selectedOrder.customer.address.state} — {selectedOrder.customer.address.pincode}
                   </p>
                 </div>
               )}

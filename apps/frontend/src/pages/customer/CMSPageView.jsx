@@ -19,7 +19,7 @@ function CMSPageView() {
       setError(null)
       try {
         const res = await getCMSPage(slug)
-        setPage(res.data?.data || res.data)
+        setPage(res.data?.page || res.data?.data || res.data)
       } catch (err) {
         setError(err.response?.status === 404 ? 'Page not found' : 'Failed to load page')
       } finally {

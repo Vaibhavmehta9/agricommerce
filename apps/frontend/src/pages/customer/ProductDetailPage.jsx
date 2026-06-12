@@ -32,21 +32,23 @@ function ProductDetailPage() {
       setError(null)
       try {
         const res = await getProductBySlug(slug)
-        const data = res.data?.data || res.data
-        setProduct(data)
+        const productData = res.data?.product || res.data?.data || res.data
+        setProduct(productData)
         setSelectedImage(0)
         setQuantity(1)
 
-        // Fetch related products
-        if (data?.category?._id || data?.category) {
+        // Set related products from response or fetch as fallback
+        if (res.data?.related) {
+          setRelatedProducts(res.data.related)
+        } else if (productData?.category?._id || productData?.category) {
           const relRes = await getProducts({
-            category: data.category?._id || data.category,
+            category: productData.category?._id || productData.category,
             limit: 4,
             status: 'active',
           })
           const relData = relRes.data?.data || relRes.data || []
           const arr = Array.isArray(relData) ? relData : relData.products || []
-          setRelatedProducts(arr.filter((p) => p._id !== data._id).slice(0, 4))
+          setRelatedProducts(arr.filter((p) => p._id !== productData._id).slice(0, 4))
         }
       } catch (err) {
         setError(err.response?.status === 404 ? 'Product not found.' : 'Failed to load product.')

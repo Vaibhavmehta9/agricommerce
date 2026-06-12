@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { loginAdmin, getMe } from '../api/authAPI'
+import { loginAdmin, registerUser, getMe } from '../api/authAPI'
 import toast from 'react-hot-toast'
 
 const AuthContext = createContext(null)
@@ -56,15 +56,38 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const register = useCallback(async (name, email, password) => {
+    try {
+      const response = await registerUser({ name, email, password })
+      const { token: newToken, user: userData, data } = response.data
+      const resolvedToken = newToken || data?.token
+      const resolvedUser = userData || data?.user || data
+
+      localStorage.setItem('agri_token', resolvedToken)
+      localStorage.setItem('agri_user', JSON.stringify(resolvedUser))
+
+      setToken(resolvedToken)
+      setUser(resolvedUser)
+      setIsAuthenticated(true)
+      toast.success('Welcome to AgriCommerce!')
+      return { success: true }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Registration failed. Please try again.'
+      toast.error(message)
+      return { success: false, error: message }
+    }
+  }, [])
+
   const logout = useCallback(() => {
+    const isAdmin = user?.role === 'admin'
     localStorage.removeItem('agri_token')
     localStorage.removeItem('agri_user')
     setToken(null)
     setUser(null)
     setIsAuthenticated(false)
     toast.success('Logged out successfully')
-    window.location.href = '/admin/login'
-  }, [])
+    window.location.href = isAdmin ? '/admin/login' : '/'
+  }, [user])
 
   const value = {
     user,
@@ -72,6 +95,7 @@ export function AuthProvider({ children }) {
     isAuthenticated,
     isLoading,
     login,
+    register,
     logout,
   }
 

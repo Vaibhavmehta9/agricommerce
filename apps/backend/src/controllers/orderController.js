@@ -70,12 +70,18 @@ const createOrder = async (req, res) => {
   }));
   await Product.bulkWrite(bulkOps);
 
-  const order = await Order.create({
+  const orderData = {
     customer,
     items: validatedItems,
     total: parseFloat(total.toFixed(2)),
     notes: notes || '',
-  });
+  };
+
+  if (req.user) {
+    orderData.user = req.user._id;
+  }
+
+  const order = await Order.create(orderData);
 
   res.status(201).json({ success: true, message: 'Order placed successfully', order });
 };
@@ -121,7 +127,7 @@ const getOrders = async (req, res) => {
  */
 const updateOrderStatus = async (req, res) => {
   const { status } = req.body;
-  const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+  const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Returned'];
 
   if (!status || !validStatuses.includes(status)) {
     return res.status(400).json({
@@ -167,4 +173,150 @@ const updateOrderStatus = async (req, res) => {
   res.status(200).json({ success: true, message: 'Order status updated', order: populatedOrder });
 };
 
-module.exports = { createOrder, getOrders, updateOrderStatus };
+/**
+ * @desc   Get logged-in user's orders
+ * @route  GET /api/orders/my-orders
+ * @access Private
+ */
+const getMyOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user._id })
+      .populate('items.product', 'name slug images')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, orders });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch your orders' });
+  }
+};
+
+/**
+ * @desc   Track a single order
+ * @route  GET /api/orders/track
+ * @access Public
+ */
+const trackOrder = async (req, res) => {
+  const { orderId, email } = req.query;
+
+  if (!orderId || !email) {
+    return res.status(400).json({ success: false, message: 'Order ID and Email are required for tracking' });
+  }
+
+  try {
+    const order = await Order.findById(orderId).populate('items.product', 'name slug images');
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.customer.email.toLowerCase().trim() !== email.toLowerCase().trim()) {
+      return res.status(403).json({ success: false, message: 'Email does not match this Order ID' });
+    }
+
+    res.status(200).json({ success: true, order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error retrieving tracking details' });
+  }
+};
+
+/**
+ * @desc   Cancel a pending or processing order
+ * @route  PUT /api/orders/:id/cancel
+ * @access Public/Private (Optional Auth)
+ */
+const cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (req.user) {
+      const isOwner = order.user && order.user.toString() === req.user._id.toString();
+      const emailMatches = order.customer.email.toLowerCase().trim() === req.user.email.toLowerCase().trim();
+      if (!isOwner && !emailMatches) {
+        return res.status(403).json({ success: false, message: 'You are not authorized to cancel this order' });
+      }
+    } else {
+      const { email } = req.body;
+      if (!email || order.customer.email.toLowerCase().trim() !== email.toLowerCase().trim()) {
+        return res.status(403).json({ success: false, message: 'Email verification required to cancel order' });
+      }
+    }
+
+    if (order.status === 'Cancelled') {
+      return res.status(200).json({ success: true, message: 'Order is already cancelled', order });
+    }
+
+    const uncancelableStatuses = ['Shipped', 'Delivered', 'Returned', 'Return Requested'];
+    if (uncancelableStatuses.includes(order.status)) {
+      return res.status(400).json({ success: false, message: `Cannot cancel order after it has been ${order.status.toLowerCase()}` });
+    }
+
+    order.status = 'Cancelled';
+    await order.save();
+
+    // Restore product stock
+    const bulkOps = order.items.map((item) => ({
+      updateOne: {
+        filter: { _id: item.product },
+        update: { $inc: { stock: item.quantity } },
+      },
+    }));
+    await Product.bulkWrite(bulkOps);
+
+    res.status(200).json({ success: true, message: 'Order cancelled successfully', order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to cancel order' });
+  }
+};
+
+/**
+ * @desc   Request return for a delivered order
+ * @route  PUT /api/orders/:id/return
+ * @access Public/Private (Optional Auth)
+ */
+const returnOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (req.user) {
+      const isOwner = order.user && order.user.toString() === req.user._id.toString();
+      const emailMatches = order.customer.email.toLowerCase().trim() === req.user.email.toLowerCase().trim();
+      if (!isOwner && !emailMatches) {
+        return res.status(403).json({ success: false, message: 'You are not authorized to return this order' });
+      }
+    } else {
+      const { email } = req.body;
+      if (!email || order.customer.email.toLowerCase().trim() !== email.toLowerCase().trim()) {
+        return res.status(403).json({ success: false, message: 'Email verification required to return order' });
+      }
+    }
+
+    if (order.status !== 'Delivered') {
+      return res.status(400).json({ success: false, message: 'Only delivered orders can be returned' });
+    }
+
+    order.status = 'Return Requested';
+    await order.save();
+
+    res.status(200).json({ success: true, message: 'Return request submitted successfully', order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to request return' });
+  }
+};
+
+module.exports = {
+  createOrder,
+  getOrders,
+  updateOrderStatus,
+  getMyOrders,
+  trackOrder,
+  cancelOrder,
+  returnOrder,
+};

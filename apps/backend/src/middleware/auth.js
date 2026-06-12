@@ -40,4 +40,27 @@ const adminOnly = (req, res, next) => {
   return res.status(403).json({ success: false, message: 'Access denied — admin only' });
 };
 
-module.exports = { protect, adminOnly };
+const optionalProtect = async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (user) {
+      req.user = user;
+    }
+  } catch (error) {
+    // Ignore token errors for optional auth
+  }
+  next();
+};
+
+module.exports = { protect, adminOnly, optionalProtect };

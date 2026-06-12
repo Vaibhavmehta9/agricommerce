@@ -4,17 +4,12 @@ import { FiShoppingCart, FiMenu, FiX, FiDroplet } from 'react-icons/fi'
 import ModeToggle from '../common/ModeToggle'
 import { useCart } from '../../context/CartContext'
 import { useMode } from '../../context/ModeContext'
-
-const navLinks = [
-  { to: '/', label: 'Home' },
-  { to: '/products', label: 'Products' },
-  { to: '/pages/about', label: 'About' },
-  { to: '/pages/contact', label: 'Contact' },
-]
+import { useAuth } from '../../context/AuthContext'
 
 function Navbar() {
   const { getCount } = useCart()
   const { isB2B } = useMode()
+  const { user, isAuthenticated, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
@@ -30,6 +25,19 @@ function Navbar() {
   useEffect(() => {
     setMenuOpen(false)
   }, [location])
+
+  const links = [
+    { to: '/', label: 'Home' },
+    { to: '/products', label: 'Products' },
+    { to: '/track-order', label: 'Track Order' },
+  ]
+
+  if (isAuthenticated) {
+    links.push({ to: '/my-orders', label: 'My Orders' })
+  }
+
+  links.push({ to: '/pages/about', label: 'About' })
+  links.push({ to: '/pages/contact', label: 'Contact' })
 
   return (
     <nav
@@ -57,7 +65,7 @@ function Navbar() {
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map(({ to, label }) => (
+            {links.map(({ to, label }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -75,7 +83,7 @@ function Navbar() {
             ))}
           </div>
 
-          {/* Right side: ModeToggle + Cart + Hamburger */}
+          {/* Right side: ModeToggle + Cart + Auth + Hamburger */}
           <div className="flex items-center gap-3">
             {/* Mode Toggle */}
             <div className="hidden sm:block">
@@ -108,6 +116,23 @@ function Navbar() {
               </Link>
             )}
 
+            {/* Auth Button (Desktop) */}
+            {isAuthenticated ? (
+              <button
+                onClick={logout}
+                className="hidden sm:inline-flex items-center justify-center px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold rounded-xl transition-colors cursor-pointer"
+              >
+                Log Out
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="hidden sm:inline-flex items-center justify-center px-4 py-2 bg-green-700 hover:bg-green-800 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+              >
+                Log In
+              </Link>
+            )}
+
             {/* Hamburger (mobile) */}
             <button
               onClick={() => setMenuOpen((prev) => !prev)}
@@ -124,7 +149,7 @@ function Navbar() {
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg animate-slide-down">
           <div className="max-w-7xl mx-auto px-4 py-4 space-y-1">
-            {navLinks.map(({ to, label }) => (
+            {links.map(({ to, label }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -170,6 +195,25 @@ function Navbar() {
                 )}
               </Link>
             )}
+
+            {/* Mobile Auth Button */}
+            <div className="px-4 py-3 border-t border-gray-100 mt-2">
+              {isAuthenticated ? (
+                <button
+                  onClick={logout}
+                  className="w-full text-center bg-red-50 border border-red-200 hover:bg-red-100 text-red-600 font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                >
+                  Log Out
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="block text-center bg-green-700 hover:bg-green-800 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                >
+                  Log In
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       )}
