@@ -26,6 +26,9 @@ AgriCommerce is a full-stack MERN agricultural e-commerce platform for retail cu
 
 ![AgriCommerce admin login](docs/images/admin-login.png)
 
+### Admin Dashboard
+![AgriCommerce admin Dashboard](docs/images/admin-dashboard.png)
+
 
 ## 🚀 Live Demo
 
