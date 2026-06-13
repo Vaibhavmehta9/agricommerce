@@ -26,6 +26,33 @@ AgriCommerce is a full-stack MERN agricultural e-commerce platform for retail cu
 
 ![AgriCommerce admin login](docs/images/admin-login.png)
 
+
+## 🚀 Live Demo
+
+**User / Customer Storefront:**
+https://agricommerce-lemon.vercel.app
+
+**Admin Dashboard:**
+https://agricommerce-lemon.vercel.app/admin/dashboard
+
+**Admin Login:**
+https://agricommerce-lemon.vercel.app/admin/login
+
+**Backend API Base URL:**
+https://agricommerce-6dnx.onrender.com/api
+
+## 🔑 Administrator Credentials
+
+To access the Admin Dashboard:
+
+1. Navigate to the Admin Login link above.
+2. Log in using the following pre-seeded credentials:
+
+```text
+Email: admin@agri.com
+Password: Admin@1234
+```
+
 ## Project Structure
 
 ```text
